@@ -1,6 +1,5 @@
 # Plan
 
-- display a window
 - take an image as parameter
 - display image passed as parameter
 - select pixel in image passed
