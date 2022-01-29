@@ -1,26 +1,36 @@
-use regex::Regex;
+use regex::{Match, Regex};
 use std::env;
-use bevy::prelude::*;
+use lazy_static::lazy_static;
+
+static aeron_regex: &str = "aeron_file=.*";
 
 fn main() {
   let args: Vec<String> = env::args().collect();
-  App::build()
-    .add_plugins(DefaultPlugins)
-    .run();
 }
 
-fn is_valid_image_path(arg: &str) -> bool {
-  return Regex::new(r"\.png$").unwrap().is_match(&arg)
+fn get_aeron_file(arg: &str) -> Option<&str> {
+  lazy_static! {
+    static ref mode: Regex = Regex::new(aeron_regex).unwrap();
+  }
+  // error: look-around, including look-ahead and look-behind, is not supported
+  if mode.is_match(arg) {
+    let split: Vec<&str> = arg.split('=').collect();
+    let last: Option<&&str> = split.last();
+    if last.is_some() && !last.unwrap().is_empty() {
+      return Some(last.unwrap());
+    }
+  }
+  None
 }
 
 #[cfg(test)]
 mod tests {
-  use crate::is_valid_image_path;
+  use crate::get_aeron_file;
 
   #[test]
-  fn is_valid_image_path_test() {
-    assert_eq!(is_valid_image_path("pom"), false);
-    assert_eq!(is_valid_image_path(""), false);
-    assert_eq!(is_valid_image_path("/home/julien/image.png"), true);
+  fn get_aeron_file_test() {
+    assert_eq!(get_aeron_file("aeron_file=pom.dat"), Some("pom.dat"));
+    assert_eq!(get_aeron_file("aeron_file="), None);
+    assert_eq!(get_aeron_file("pom=pouet"), None);
   }
 }
